@@ -1,0 +1,21 @@
+name: graphql_fragment_builder
+description: A flexible and type-safe GraphQL fragment builder for Dart and Flutter applications.
+version: 1.0.0
+homepage: https://github.com/gabrimatic/graphql_fragment_builder
+repository: https://github.com/gabrimatic/graphql_fragment_builder
+issue_tracker: https://github.com/gabrimatic/graphql_fragment_builder/issues
+
+environment:
+  sdk: ^3.5.1
+  flutter: ">=1.17.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:

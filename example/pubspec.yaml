@@ -1,0 +1,22 @@
+name: graphql_fragment_builder_example
+description: "An example Flutter project demonstrating the use of the graphql_fragment_builder package for creating flexible and type-safe GraphQL queries."
+
+publish_to: "none"
+
+environment:
+  sdk: ^3.5.1
+  flutter: ">=1.17.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  graphql_fragment_builder:
+    path: ../
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
