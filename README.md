@@ -50,6 +50,21 @@ debugPrint(query.buildQuery());
 debugPrint(query.variables);
 ```
 
+**Output:**
+
+```dart
+getBooksByAuthor(authorName: $authorName, limit: $limit) {
+  bookDetails {
+    title
+    author
+    publicationYear
+    genre
+  }
+}
+
+{authorName: Jane Austen, limit: 5}
+```
+
 ## Advanced Usage
 
 You can combine multiple fragments in a single query for more complex operations:
@@ -74,6 +89,25 @@ final complexQuery = GraphQLQueryBuilder(
   ],
   fragments: [AuthorDetailsFragment(), BookDetailsFragment()],
 );
+```
+
+**Output:**
+```dart
+getAuthorWithBooks(authorId: $authorId) {
+  authorDetails {
+    name
+    birthYear
+    nationality
+  }
+  bookDetails {
+    title
+    author
+    publicationYear
+    genre
+  }
+}
+
+{authorId: 123}
 ```
 
 This flexibility allows you to build complex queries while maintaining readability and type safety.

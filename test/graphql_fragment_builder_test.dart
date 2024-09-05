@@ -1,5 +1,5 @@
-import 'package:flutter_test/flutter_test.dart';
 import 'package:graphql_fragment_builder/graphql_fragment_builder.dart';
+import 'package:test/test.dart';
 
 class TestFragment extends QueryFragment with SimpleQueryFragment {
   @override

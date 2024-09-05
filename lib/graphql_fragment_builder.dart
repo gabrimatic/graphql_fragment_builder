@@ -2,7 +2,7 @@
 ///
 /// This library provides a pattern-matching approach to building GraphQL queries,
 /// offering improved type safety, readability, and maintainability.
-library graphql_fragment_builder;
+library;
 
 export 'src/query_builder.dart';
 export 'src/query_fragment.dart';

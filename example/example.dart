@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:graphql_fragment_builder/graphql_fragment_builder.dart';
 
 class BookDetailsFragment extends QueryFragment with SimpleQueryFragment {
@@ -24,8 +23,8 @@ void main() {
     fragments: [BookDetailsFragment()],
   );
 
-  debugPrint('Query:');
-  debugPrint(query.buildQuery());
-  debugPrint('\nVariables:');
-  debugPrint('${query.variables}');
+  print('Query:');
+  print(query.buildQuery());
+  print('\nVariables:');
+  print('${query.variables}');
 }

@@ -7,15 +7,9 @@ issue_tracker: https://github.com/gabrimatic/graphql_fragment_builder/issues
 
 environment:
   sdk: ^3.5.1
-  flutter: ">=1.17.0"
 
 dependencies:
-  flutter:
-    sdk: flutter
 
 dev_dependencies:
-  flutter_test:
-    sdk: flutter
-  flutter_lints: ^4.0.0
-
-flutter:
+  lints: ^4.0.0
+  test: ^1.24.0
