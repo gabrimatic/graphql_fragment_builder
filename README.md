@@ -121,7 +121,7 @@ This flexibility allows you to build complex queries while maintaining readabili
 - **Parameter handling:** Easily include and manage query parameters.
 
 ## Developer
-By [Hossein Yousefpour](https://gabrimatic.info "Hossein Yousefpour")
+By [Soroush Yousefpour](https://gabrimatic.info "Soroush Yousefpour")
 
 &copy; All rights reserved.
 
