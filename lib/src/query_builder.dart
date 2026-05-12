@@ -1,3 +1,4 @@
+import 'graphql_writer.dart';
 import 'query_fragment.dart';
 import 'query_parameter.dart';
 
@@ -16,10 +17,7 @@ enum GraphQLOperationType {
   String get keyword => name;
 }
 
-/// A builder class for constructing GraphQL queries.
-///
-/// This class provides a flexible and type-safe way to build GraphQL queries
-/// using a pattern-matching approach.
+/// Builds GraphQL root selections and full operation documents.
 class GraphQLQueryBuilder {
   /// The root field name of the GraphQL operation.
   final String name;
@@ -30,53 +28,49 @@ class GraphQLQueryBuilder {
   /// The GraphQL operation type.
   final GraphQLOperationType operationType;
 
-  /// The parameters to be included in the query.
+  /// Arguments on the root field. Arguments are emitted as GraphQL variables.
   final List<QueryParameter> parameters;
 
-  /// The fragments to be included in the query.
+  /// Selections under the root field.
   final List<QueryFragment> fragments;
 
-  /// Creates a new [GraphQLQueryBuilder] with the given [name], [parameters], and [fragments].
-  GraphQLQueryBuilder({
+  /// Named fragment definitions appended to full operation documents.
+  final List<GraphQLFragmentDefinition> fragmentDefinitions;
+
+  /// Creates a new [GraphQLQueryBuilder].
+  const GraphQLQueryBuilder({
     required this.name,
     this.operationName,
     this.operationType = GraphQLOperationType.query,
     this.parameters = const [],
     this.fragments = const [],
+    this.fragmentDefinitions = const [],
   });
 
-  /// Generates a map of variables for the GraphQL query.
+  /// Generates a map of variables referenced by the operation tree.
   ///
-  /// This map is used when sending the query to the GraphQL server.
+  /// Duplicate variable names are allowed only when they resolve to the same
+  /// value and compatible metadata.
   Map<String, dynamic> get variables => Map.fromEntries(
-        parameters.map((p) => p.toMapEntry()),
+        _mergedParameters().map((parameter) => parameter.toMapEntry()),
       );
 
-  /// Builds the complete GraphQL query string.
+  /// Builds the root field selection.
   ///
-  /// This method returns the root field selection only. Use [buildDocument] when
-  /// you need a complete `query`, `mutation`, or `subscription` operation.
-  ///
-  /// Returns a string representation of the GraphQL query.
+  /// Use [buildDocument] when you need a complete `query`, `mutation`, or
+  /// `subscription` operation.
   String buildQuery() {
     _validate();
 
-    final buffer = StringBuffer(name);
-
-    if (parameters.isNotEmpty) {
-      buffer.write('(');
-      buffer.writeAll(
-        parameters.map((parameter) => parameter.argument),
-        ', ',
-      );
-      buffer.write(')');
+    final header = _rootFieldHeader();
+    if (fragments.isEmpty) {
+      return header;
     }
 
-    buffer.write(' {\n');
+    final buffer = StringBuffer()..writeln('$header {');
 
     for (final fragment in fragments) {
-      buffer.write(_indent(fragment.fragment, 1));
-      buffer.write('\n');
+      buffer.writeln(indentBlock(fragment.fragment, 1));
     }
 
     buffer.write('}');
@@ -85,72 +79,204 @@ class GraphQLQueryBuilder {
 
   /// Builds a complete GraphQL operation document.
   ///
-  /// Parameters need a [QueryParameter.type] before they can be emitted as
-  /// variable definitions.
+  /// Every referenced [QueryParameter] needs a GraphQL type before it can be
+  /// emitted as a variable definition.
   String buildDocument() {
-    _validate();
+    _validate(requireDocument: true);
 
+    final operationParameters = _mergedParameters(requireTypes: true);
     final buffer = StringBuffer(operationType.keyword);
 
     if (operationName != null) {
       buffer.write(' $operationName');
     }
 
-    if (parameters.isNotEmpty) {
+    if (operationParameters.isNotEmpty) {
       buffer.write('(');
       buffer.writeAll(
-        parameters.map((parameter) => parameter.definition),
+        operationParameters.map((parameter) => parameter.definition),
         ', ',
       );
       buffer.write(')');
     }
 
     buffer.writeln(' {');
-    buffer.writeln(_indent(buildQuery(), 1));
+    buffer.writeln(indentBlock(buildQuery(), 1));
     buffer.write('}');
+
+    if (fragmentDefinitions.isNotEmpty) {
+      buffer.writeln();
+      buffer.writeln();
+      buffer.write(
+        fragmentDefinitions
+            .map((definition) => definition.definition)
+            .join('\n\n'),
+      );
+    }
 
     return buffer.toString();
   }
 
-  void _validate() {
-    _validateGraphQLName(name, 'query name');
+  String _rootFieldHeader() {
+    final arguments = parameters.isEmpty
+        ? ''
+        : '(${parameters.map((parameter) => parameter.argument).join(', ')})';
+
+    return '$name$arguments';
+  }
+
+  void _validate({bool requireDocument = false}) {
+    validateGraphQLName(name, 'query name');
 
     final currentOperationName = operationName;
     if (currentOperationName != null) {
-      _validateGraphQLName(currentOperationName, 'operation name');
+      validateGraphQLName(currentOperationName, 'operation name');
     }
 
-    for (final parameter in parameters) {
-      parameter.validate();
+    _mergedParameters(requireTypes: requireDocument);
+    _validateFragmentDefinitions(requireDocument: requireDocument);
+  }
+
+  void _validateFragmentDefinitions({required bool requireDocument}) {
+    final definitions = <String>{};
+
+    for (final definition in fragmentDefinitions) {
+      validateGraphQLName(definition.name, 'fragment definition name');
+
+      if (!definitions.add(definition.name)) {
+        throw ArgumentError.value(
+          definition.name,
+          'fragmentDefinitions',
+          'Duplicate GraphQL fragment definition.',
+        );
+      }
+
+      definition.definition;
     }
 
-    if (fragments.isEmpty) {
+    if (!requireDocument) {
+      return;
+    }
+
+    final referenced = <String>{
+      for (final fragment in fragments) ...fragment.referencedFragmentNames,
+      for (final definition in fragmentDefinitions)
+        ...definition.referencedFragmentNames,
+    };
+    final missing = referenced.difference(definitions);
+
+    if (missing.isNotEmpty) {
       throw ArgumentError.value(
-        fragments,
-        'fragments',
-        'A GraphQL query must include at least one fragment.',
+        missing.join(', '),
+        'fragmentDefinitions',
+        'Every fragment spread in a document needs a matching definition.',
       );
     }
   }
+
+  List<QueryParameter> _allParameters() => [
+        ...parameters,
+        for (final fragment in fragments) ...fragment.referencedParameters,
+        for (final definition in fragmentDefinitions)
+          ...definition.referencedParameters,
+      ];
+
+  List<QueryParameter> _mergedParameters({bool requireTypes = false}) {
+    final registry = _ParameterRegistry();
+
+    for (final parameter in _allParameters()) {
+      registry.add(parameter);
+    }
+
+    final merged = registry.parameters;
+
+    if (requireTypes) {
+      for (final parameter in merged) {
+        parameter.validate(requireType: true);
+      }
+    }
+
+    return merged;
+  }
 }
 
-String _indent(String value, int levels) {
-  final prefix = '  ' * levels;
+class _ParameterRegistry {
+  final _parameters = <String, QueryParameter>{};
 
-  return value
-      .split('\n')
-      .map((line) => line.isEmpty ? line : '$prefix$line')
-      .join('\n');
-}
+  List<QueryParameter> get parameters => _parameters.values.toList();
 
-void _validateGraphQLName(String value, String label) {
-  final isValid = RegExp(r'^[_A-Za-z][_0-9A-Za-z]*$').hasMatch(value);
+  void add(QueryParameter parameter) {
+    parameter.validate();
 
-  if (!isValid) {
-    throw ArgumentError.value(
-      value,
-      label,
-      'Must be a valid GraphQL name.',
+    final current = _parameters[parameter.name];
+    if (current == null) {
+      _parameters[parameter.name] = parameter;
+      return;
+    }
+
+    _parameters[parameter.name] = _merge(current, parameter);
+  }
+
+  QueryParameter _merge(
+    QueryParameter current,
+    QueryParameter incoming,
+  ) {
+    if (current.value != incoming.value) {
+      throw ArgumentError.value(
+        incoming.name,
+        'parameters',
+        'Duplicate GraphQL variables must use the same value.',
+      );
+    }
+
+    final type = _mergeOptional(
+      'type',
+      current.type,
+      incoming.type,
+      incoming.name,
     );
+    final defaultValue = _mergeOptional(
+      'defaultValue',
+      current.defaultValue,
+      incoming.defaultValue,
+      incoming.name,
+    );
+
+    return QueryParameter(
+      current.name,
+      current.value,
+      argumentName: current.argumentName ?? incoming.argumentName,
+      type: type,
+      isRequired: current.isRequired || incoming.isRequired,
+      defaultValue: defaultValue,
+    );
+  }
+
+  String? _mergeOptional(
+    String field,
+    String? current,
+    String? incoming,
+    String name,
+  ) {
+    final currentValue = current?.trim();
+    final incomingValue = incoming?.trim();
+
+    if (currentValue == null || currentValue.isEmpty) {
+      return incomingValue;
+    }
+
+    if (incomingValue == null || incomingValue.isEmpty) {
+      return currentValue;
+    }
+
+    if (currentValue != incomingValue) {
+      throw ArgumentError.value(
+        name,
+        'parameters',
+        'Duplicate GraphQL variable "$name" has conflicting $field values.',
+      );
+    }
+
+    return currentValue;
   }
 }

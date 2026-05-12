@@ -3,7 +3,7 @@
 [![Dart CI](https://github.com/gabrimatic/graphql_fragment_builder/actions/workflows/dart.yml/badge.svg)](https://github.com/gabrimatic/graphql_fragment_builder/actions/workflows/dart.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-GraphQL Fragment Builder is a small Dart package for building GraphQL selection sets, variables, and operation documents without assembling strings by hand. It is useful when a Flutter or Dart app needs a compact query builder, but not a full GraphQL client.
+GraphQL Fragment Builder is a small Dart package for building GraphQL selection sets, variables, fragments, and operation documents without assembling strings by hand. It keeps the query shape close to Dart code, while still producing plain GraphQL strings and variable maps for any client.
 
 ## Quick Start
 
@@ -16,28 +16,35 @@ dependencies:
   graphql_fragment_builder: ^1.1.0
 ```
 
-Import it:
+Build a document:
 
 ```dart
 import 'package:graphql_fragment_builder/graphql_fragment_builder.dart';
-```
 
-Build a complete operation document:
+const bookFields = GraphQLFragmentDefinition(
+  name: 'BookFields',
+  typeCondition: 'Book',
+  fields: ['id', 'title', 'publicationYear'],
+);
 
-```dart
 final query = GraphQLQueryBuilder(
-  name: 'book',
-  operationName: 'GetBook',
+  name: 'booksByAuthor',
+  operationName: 'BooksByAuthor',
   parameters: const [
-    QueryParameter('id', 'book-1', type: 'ID', isRequired: true),
+    QueryParameter('authorName', 'Jane Austen', type: 'String', isRequired: true),
+    QueryParameter('bookLimit', 5, argumentName: 'limit', type: 'Int'),
   ],
   fragments: const [
+    FragmentSpread('BookFields'),
     QuerySelection(
-      name: 'author',
-      alias: 'primaryAuthor',
-      fields: ['name'],
+      name: 'reviews',
+      parameters: [
+        QueryParameter('reviewLimit', 3, argumentName: 'limit', type: 'Int'),
+      ],
+      fields: ['rating', 'body'],
     ),
   ],
+  fragmentDefinitions: const [bookFields],
 );
 
 print(query.buildDocument());
@@ -47,27 +54,52 @@ print(query.variables);
 Output:
 
 ```graphql
-query GetBook($id: ID!) {
-  book(id: $id) {
-    primaryAuthor: author {
-      name
+query BooksByAuthor($authorName: String!, $bookLimit: Int, $reviewLimit: Int) {
+  booksByAuthor(authorName: $authorName, limit: $bookLimit) {
+    ...BookFields
+    reviews(limit: $reviewLimit) {
+      rating
+      body
     }
   }
+}
+
+fragment BookFields on Book {
+  id
+  title
+  publicationYear
 }
 ```
 
 ```dart
-{id: book-1}
+{authorName: Jane Austen, bookLimit: 5, reviewLimit: 3}
 ```
 
 ## What It Builds
-
-The package has two output modes:
 
 | Method | Output | Use it when |
 | --- | --- | --- |
 | `buildQuery()` | A root field selection | Your GraphQL client wraps the operation for you |
 | `buildDocument()` | A full `query`, `mutation`, or `subscription` document | You send the document string yourself |
+| `variables` | A merged variable map from the whole selection tree | Your client sends variables separately |
+
+## Variables And Arguments
+
+`QueryParameter.name` is the GraphQL variable name. By default it is also the schema argument name.
+
+Use `argumentName` when the schema argument and local variable should differ:
+
+```dart
+QueryParameter('reviewLimit', 3, argumentName: 'limit', type: 'Int')
+```
+
+That emits:
+
+```graphql
+limit: $reviewLimit
+```
+
+Variables are collected from the root field, nested selections, inline fragments, and named fragment definitions. Duplicate variable names are allowed only when they resolve to the same value and compatible metadata; conflicting duplicates throw `ArgumentError`.
 
 ## Selection Sets
 
@@ -83,19 +115,36 @@ class BookDetailsFragment extends QueryFragment with SimpleQueryFragment {
 }
 ```
 
-Use `QuerySelection` when the field needs arguments, an alias, or nested selections:
+Use `QuerySelection` when a field needs arguments, an alias, or nested selections:
 
 ```dart
 const QuerySelection(
-  name: 'reviews',
-  parameters: [
-    QueryParameter('limit', 3),
-  ],
-  fields: ['rating', 'body'],
+  name: 'author',
+  alias: 'primaryAuthor',
+  fields: ['name'],
 );
 ```
 
-Field arguments use GraphQL variables. If you call `buildDocument()`, include the matching typed `QueryParameter` in the root builder so the operation can emit the variable definition.
+Use `InlineFragment` for interfaces and unions:
+
+```dart
+const InlineFragment(
+  typeCondition: 'Book',
+  fields: ['title'],
+);
+```
+
+Use `GraphQLFragmentDefinition` and `FragmentSpread` for reusable named fragments:
+
+```dart
+const bookFields = GraphQLFragmentDefinition(
+  name: 'BookFields',
+  typeCondition: 'Book',
+  fields: ['id', 'title'],
+);
+
+const spread = FragmentSpread('BookFields');
+```
 
 ## Operations
 
@@ -118,19 +167,21 @@ final mutation = GraphQLQueryBuilder(
 );
 ```
 
-`QueryParameter.type` is only required for `buildDocument()`, because GraphQL operation documents need variable definitions. `buildQuery()` can still use parameters without types for clients that only need the root field selection.
+`QueryParameter.type` is required for `buildDocument()`, because GraphQL operation documents need variable definitions. `buildQuery()` can still use parameters without types for clients that only need the root field selection.
 
 ## Validation
 
-The builder validates GraphQL-facing names before emitting output:
+The builder validates GraphQL-facing names and variable types before emitting output:
 
 - Operation names
 - Root field names
-- Parameter names
+- Argument and variable names
 - Selection names and aliases
 - Scalar field names
+- GraphQL variable types such as `String`, `ID!`, and `[String!]!`
+- Named fragment definitions and spreads
 
-Invalid names throw `ArgumentError`. Missing parameter types in `buildDocument()` throw `StateError`.
+Invalid names and conflicting variables throw `ArgumentError`. Missing parameter types in `buildDocument()` throw `StateError`.
 
 ## Development
 

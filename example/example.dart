@@ -1,41 +1,45 @@
 import 'package:graphql_fragment_builder/graphql_fragment_builder.dart';
 
-class BookDetailsFragment extends QueryFragment with SimpleQueryFragment {
-  @override
-  String get objectName => 'book';
-
-  @override
-  List<String> get fields => [
-        'id',
-        'title',
-        'publicationYear',
-        'genre',
-      ];
-}
+const bookFields = GraphQLFragmentDefinition(
+  name: 'BookFields',
+  typeCondition: 'Book',
+  fields: ['id', 'title', 'publicationYear', 'genre'],
+);
 
 void main() {
-  final query = GraphQLQueryBuilder(
+  const query = GraphQLQueryBuilder(
     name: 'booksByAuthor',
     operationName: 'BooksByAuthor',
-    parameters: const [
+    parameters: [
       QueryParameter(
         'authorName',
         'Jane Austen',
         type: 'String',
         isRequired: true,
       ),
-      QueryParameter('limit', 5, type: 'Int'),
+      QueryParameter(
+        'bookLimit',
+        5,
+        argumentName: 'limit',
+        type: 'Int',
+      ),
     ],
     fragments: [
-      BookDetailsFragment(),
-      const QuerySelection(
+      FragmentSpread('BookFields'),
+      QuerySelection(
         name: 'reviews',
         parameters: [
-          QueryParameter('limit', 3),
+          QueryParameter(
+            'reviewLimit',
+            3,
+            argumentName: 'limit',
+            type: 'Int',
+          ),
         ],
         fields: ['rating', 'body'],
       ),
     ],
+    fragmentDefinitions: [bookFields],
   );
 
   print('Document:');

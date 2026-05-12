@@ -6,6 +6,7 @@ repository: https://github.com/gabrimatic/graphql_fragment_builder
 issue_tracker: https://github.com/gabrimatic/graphql_fragment_builder/issues
 topics:
   - graphql
+  - graphql-fragments
   - query-builder
   - dart
 
