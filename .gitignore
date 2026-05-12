@@ -1,4 +1,4 @@
-# Miscellaneous
+# System and editor files
 *.class
 *.log
 *.pyc
@@ -10,23 +10,20 @@
 .svn/
 migrate_working_dir/
 
-# IntelliJ related
+# IntelliJ
 *.iml
 *.ipr
 *.iws
 .idea/
 
-# The .vscode folder contains launch configuration and tasks you configure in
-# VS Code which you may wish to be included in version control, so this line
-# is commented out by default.
+# Keep VS Code project settings available when they are intentionally added.
 #.vscode/
 
-# Flutter/Dart/Pub related
-# Libraries should not include pubspec.lock, per https://dart.dev/guides/libraries/private-files#pubspeclock.
+# Dart and Flutter
 /pubspec.lock
 **/doc/api/
 .dart_tool/
 build/
 
-# Do not ignore example files
+# Keep example source files tracked.
 !example/lib/example.dart

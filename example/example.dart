@@ -2,12 +2,12 @@ import 'package:graphql_fragment_builder/graphql_fragment_builder.dart';
 
 class BookDetailsFragment extends QueryFragment with SimpleQueryFragment {
   @override
-  String get objectName => 'bookDetails';
+  String get objectName => 'book';
 
   @override
   List<String> get fields => [
+        'id',
         'title',
-        'author',
         'publicationYear',
         'genre',
       ];
@@ -15,16 +15,31 @@ class BookDetailsFragment extends QueryFragment with SimpleQueryFragment {
 
 void main() {
   final query = GraphQLQueryBuilder(
-    name: 'getBooksByAuthor',
+    name: 'booksByAuthor',
+    operationName: 'BooksByAuthor',
     parameters: const [
-      QueryParameter('authorName', 'Jane Austen'),
-      QueryParameter('limit', 5),
+      QueryParameter(
+        'authorName',
+        'Jane Austen',
+        type: 'String',
+        isRequired: true,
+      ),
+      QueryParameter('limit', 5, type: 'Int'),
     ],
-    fragments: [BookDetailsFragment()],
+    fragments: [
+      BookDetailsFragment(),
+      const QuerySelection(
+        name: 'reviews',
+        parameters: [
+          QueryParameter('limit', 3),
+        ],
+        fields: ['rating', 'body'],
+      ),
+    ],
   );
 
-  print('Query:');
-  print(query.buildQuery());
+  print('Document:');
+  print(query.buildDocument());
   print('\nVariables:');
   print('${query.variables}');
 }

@@ -1,129 +1,156 @@
 # GraphQL Fragment Builder
 
-A Flutter package that enables you to build flexible and type-safe GraphQL fragments and queries with a single function call.
+[![Dart CI](https://github.com/gabrimatic/graphql_fragment_builder/actions/workflows/dart.yml/badge.svg)](https://github.com/gabrimatic/graphql_fragment_builder/actions/workflows/dart.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-## How to use it?
+GraphQL Fragment Builder is a small Dart package for building GraphQL selection sets, variables, and operation documents without assembling strings by hand. It is useful when a Flutter or Dart app needs a compact query builder, but not a full GraphQL client.
 
-**1. Add the package to pubspec.yaml dependency:**
+## Quick Start
+
+Runtime: **Dart >= 3.5.1**.
+
+Add the package:
 
 ```yaml
 dependencies:
-  graphql_fragment_builder: ^1.0.0
+  graphql_fragment_builder: ^1.1.0
 ```
 
-**2. Import package:**
+Import it:
 
 ```dart
 import 'package:graphql_fragment_builder/graphql_fragment_builder.dart';
 ```
 
-**3. Create your fragments:**
+Build a complete operation document:
+
+```dart
+final query = GraphQLQueryBuilder(
+  name: 'book',
+  operationName: 'GetBook',
+  parameters: const [
+    QueryParameter('id', 'book-1', type: 'ID', isRequired: true),
+  ],
+  fragments: const [
+    QuerySelection(
+      name: 'author',
+      alias: 'primaryAuthor',
+      fields: ['name'],
+    ),
+  ],
+);
+
+print(query.buildDocument());
+print(query.variables);
+```
+
+Output:
+
+```graphql
+query GetBook($id: ID!) {
+  book(id: $id) {
+    primaryAuthor: author {
+      name
+    }
+  }
+}
+```
+
+```dart
+{id: book-1}
+```
+
+## What It Builds
+
+The package has two output modes:
+
+| Method | Output | Use it when |
+| --- | --- | --- |
+| `buildQuery()` | A root field selection | Your GraphQL client wraps the operation for you |
+| `buildDocument()` | A full `query`, `mutation`, or `subscription` document | You send the document string yourself |
+
+## Selection Sets
+
+Use `SimpleQueryFragment` when you only need a named object and scalar fields:
 
 ```dart
 class BookDetailsFragment extends QueryFragment with SimpleQueryFragment {
   @override
-  String get objectName => 'bookDetails';
+  String get objectName => 'book';
 
   @override
-  List<String> get fields => [
-        'title',
-        'author',
-        'publicationYear',
-        'genre',
-      ];
+  List<String> get fields => ['id', 'title', 'publishedAt'];
 }
 ```
 
-**4. Build your query:**
+Use `QuerySelection` when the field needs arguments, an alias, or nested selections:
 
 ```dart
-final query = GraphQLQueryBuilder(
-  name: 'getBooksByAuthor',
+const QuerySelection(
+  name: 'reviews',
   parameters: [
-    QueryParameter('authorName', 'Jane Austen'),
-    QueryParameter('limit', 5),
+    QueryParameter('limit', 3),
   ],
-  fragments: [BookDetailsFragment()],
-);
-
-debugPrint(query.buildQuery());
-debugPrint(query.variables);
-```
-
-**Output:**
-
-```dart
-getBooksByAuthor(authorName: $authorName, limit: $limit) {
-  bookDetails {
-    title
-    author
-    publicationYear
-    genre
-  }
-}
-
-{authorName: Jane Austen, limit: 5}
-```
-
-## Advanced Usage
-
-You can combine multiple fragments in a single query for more complex operations:
-
-```dart
-class AuthorDetailsFragment extends QueryFragment with SimpleQueryFragment {
-  @override
-  String get objectName => 'authorDetails';
-
-  @override
-  List<String> get fields => [
-        'name',
-        'birthYear',
-        'nationality',
-      ];
-}
-
-final complexQuery = GraphQLQueryBuilder(
-  name: 'getAuthorWithBooks',
-  parameters: [
-    QueryParameter('authorId', '123'),
-  ],
-  fragments: [AuthorDetailsFragment(), BookDetailsFragment()],
+  fields: ['rating', 'body'],
 );
 ```
 
-**Output:**
-```dart
-getAuthorWithBooks(authorId: $authorId) {
-  authorDetails {
-    name
-    birthYear
-    nationality
-  }
-  bookDetails {
-    title
-    author
-    publicationYear
-    genre
-  }
-}
+Field arguments use GraphQL variables. If you call `buildDocument()`, include the matching typed `QueryParameter` in the root builder so the operation can emit the variable definition.
 
-{authorId: 123}
+## Operations
+
+Default behavior: `GraphQLQueryBuilder` creates a `query`.
+
+Set `operationType` for mutations or subscriptions:
+
+```dart
+final mutation = GraphQLQueryBuilder(
+  name: 'updateBookTitle',
+  operationType: GraphQLOperationType.mutation,
+  operationName: 'UpdateBookTitle',
+  parameters: const [
+    QueryParameter('id', 'book-1', type: 'ID', isRequired: true),
+    QueryParameter('title', 'Persuasion', type: 'String'),
+  ],
+  fragments: const [
+    QuerySelection(name: 'book', fields: ['id', 'title']),
+  ],
+);
 ```
 
-This flexibility allows you to build complex queries while maintaining readability and type safety.
+`QueryParameter.type` is only required for `buildDocument()`, because GraphQL operation documents need variable definitions. `buildQuery()` can still use parameters without types for clients that only need the root field selection.
 
-## Features
+## Validation
 
-- **Pattern-matching approach:** Build GraphQL queries using a flexible, type-safe method.
-- **Improved readability:** Structured query building enhances code clarity.
-- **Easy maintenance:** Modular design allows for simple updates and extensions.
-- **Fragment support:** Create reusable query fragments for efficient query composition.
-- **Parameter handling:** Easily include and manage query parameters.
+The builder validates GraphQL-facing names before emitting output:
 
-## Developer
-By [Soroush Yousefpour](https://gabrimatic.info "Soroush Yousefpour")
+- Operation names
+- Root field names
+- Parameter names
+- Selection names and aliases
+- Scalar field names
 
-&copy; All rights reserved.
+Invalid names throw `ArgumentError`. Missing parameter types in `buildDocument()` throw `StateError`.
 
-## Donate
-<a href="https://www.buymeacoffee.com/gabrimatic" target="_blank"><img src="https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png" alt="Buy Me A Book" style="height: 41px !important;width: 174px !important;box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;-webkit-box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;" ></a>
+## Development
+
+Install dependencies:
+
+```sh
+dart pub get
+```
+
+Run the full local check:
+
+```sh
+dart format --output=none --set-exit-if-changed lib test example
+dart analyze
+dart test
+dart pub publish --dry-run
+```
+
+## Project
+
+Website · [gabrimatic.info](https://gabrimatic.info)<br>
+Source · [github.com/gabrimatic/graphql_fragment_builder](https://github.com/gabrimatic/graphql_fragment_builder)<br>
+Issues · [github.com/gabrimatic/graphql_fragment_builder/issues](https://github.com/gabrimatic/graphql_fragment_builder/issues)

@@ -1,0 +1,35 @@
+name: Bug report
+description: Report incorrect generated GraphQL output or package behavior.
+title: "Bug: "
+labels: ["bug"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What happened, and what did you expect instead?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction
+      description: Include the smallest Dart snippet that reproduces the issue.
+      render: dart
+    validations:
+      required: true
+  - type: textarea
+    id: output
+    attributes:
+      label: Generated output
+      description: Paste the generated query or document.
+      render: graphql
+    validations:
+      required: false
+  - type: input
+    id: version
+    attributes:
+      label: Package version
+      placeholder: "1.1.0"
+    validations:
+      required: true
