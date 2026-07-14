@@ -1,6 +1,7 @@
 # GraphQL Fragment Builder
 
 [![Dart CI](https://github.com/gabrimatic/graphql_fragment_builder/actions/workflows/dart.yml/badge.svg)](https://github.com/gabrimatic/graphql_fragment_builder/actions/workflows/dart.yml)
+[![pub package](https://img.shields.io/pub/v/graphql_fragment_builder.svg)](https://pub.dev/packages/graphql_fragment_builder)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 GraphQL Fragment Builder is a small Dart package for building GraphQL selection sets, variables, fragments, and operation documents without assembling strings by hand. It keeps the query shape close to Dart code, while still producing plain GraphQL strings and variable maps for any client.
