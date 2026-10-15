@@ -1,3 +1,9 @@
+## 1.2.1
+
+- Restored the minimum Dart SDK to 3.5.1. The 3.8.0 floor in 1.2.0 came from dev-only tooling, not the library, which still runs on Dart 3.5.1. Generated GraphQL output and the public API are unchanged.
+- Widened the `lints` and `test` dev dependency ranges so the package resolves on Dart 3.5.1 and on current SDKs.
+- CI now checks the package on Dart 3.5.1 and the latest stable SDK.
+
 ## 1.2.0
 
 - Raised the minimum Dart SDK to 3.8.0. Generated GraphQL output and the public API are unchanged.

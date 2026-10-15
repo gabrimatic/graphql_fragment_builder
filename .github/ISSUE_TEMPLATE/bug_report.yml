@@ -30,6 +30,6 @@ body:
     id: version
     attributes:
       label: Package version
-      placeholder: "1.2.0"
+      placeholder: "1.2.1"
     validations:
       required: true

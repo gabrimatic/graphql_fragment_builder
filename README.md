@@ -14,7 +14,7 @@ Add the package:
 
 ```yaml
 dependencies:
-  graphql_fragment_builder: ^1.2.0
+  graphql_fragment_builder: ^1.2.1
 ```
 
 Build a document:
