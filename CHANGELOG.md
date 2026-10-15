@@ -1,3 +1,11 @@
+## 1.2.0
+
+- Raised the minimum Dart SDK to 3.8.0. Generated GraphQL output and the public API are unchanged.
+- Updated the `test` dev dependency to 1.33 and adopted the current Dart formatter style.
+- Tightened the library documentation and simplified `QueryParameter.hasDefinition`.
+- Updated CI to `actions/checkout` 7 and `setup-dart` 1.8, with fatal analyzer infos, concurrency, and path filters.
+- Grouped Dependabot updates into one monthly pull request per ecosystem.
+
 ## 1.1.0
 
 - Added complete GraphQL operation document output with `buildDocument()`.
