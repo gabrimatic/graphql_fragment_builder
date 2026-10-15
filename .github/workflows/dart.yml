@@ -3,23 +3,49 @@ name: Dart CI
 on:
   push:
     branches: [master]
+    paths:
+      - "lib/**"
+      - "test/**"
+      - "example/**"
+      - "pubspec.yaml"
+      - "analysis_options.yaml"
+      - "README.md"
+      - "CHANGELOG.md"
+      - "LICENSE"
+      - ".github/workflows/dart.yml"
   pull_request:
     branches: [master]
+    paths:
+      - "lib/**"
+      - "test/**"
+      - "example/**"
+      - "pubspec.yaml"
+      - "analysis_options.yaml"
+      - "README.md"
+      - "CHANGELOG.md"
+      - "LICENSE"
+      - ".github/workflows/dart.yml"
+  workflow_dispatch:
 
 permissions:
   contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   test:
     name: Analyze and test
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v6.0.2
+        uses: actions/checkout@v7.0.1
 
       - name: Set up Dart
-        uses: dart-lang/setup-dart@v1.7.2
+        uses: dart-lang/setup-dart@v1.8.1
 
       - name: Install dependencies
         run: dart pub get
@@ -28,7 +54,7 @@ jobs:
         run: dart format --output=none --set-exit-if-changed lib test example
 
       - name: Analyze
-        run: dart analyze
+        run: dart analyze --fatal-infos
 
       - name: Test
         run: dart test
