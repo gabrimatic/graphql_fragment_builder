@@ -17,24 +17,14 @@ void main() {
         type: 'String',
         isRequired: true,
       ),
-      QueryParameter(
-        'bookLimit',
-        5,
-        argumentName: 'limit',
-        type: 'Int',
-      ),
+      QueryParameter('bookLimit', 5, argumentName: 'limit', type: 'Int'),
     ],
     fragments: [
       FragmentSpread('BookFields'),
       QuerySelection(
         name: 'reviews',
         parameters: [
-          QueryParameter(
-            'reviewLimit',
-            3,
-            argumentName: 'limit',
-            type: 'Int',
-          ),
+          QueryParameter('reviewLimit', 3, argumentName: 'limit', type: 'Int'),
         ],
         fields: ['rating', 'body'],
       ),

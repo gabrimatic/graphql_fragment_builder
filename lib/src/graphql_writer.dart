@@ -2,11 +2,7 @@ void validateGraphQLName(String value, String label) {
   final isValid = RegExp(r'^[_A-Za-z][_0-9A-Za-z]*$').hasMatch(value);
 
   if (!isValid) {
-    throw ArgumentError.value(
-      value,
-      label,
-      'Must be a valid GraphQL name.',
-    );
+    throw ArgumentError.value(value, label, 'Must be a valid GraphQL name.');
   }
 }
 

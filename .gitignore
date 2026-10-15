@@ -25,5 +25,3 @@ migrate_working_dir/
 .dart_tool/
 build/
 
-# Keep example source files tracked.
-!example/lib/example.dart

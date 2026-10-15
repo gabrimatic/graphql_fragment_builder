@@ -45,14 +45,14 @@ class QuerySelection extends QueryFragment {
 
   @override
   List<QueryParameter> get referencedParameters => [
-        ...parameters,
-        for (final fragment in fragments) ...fragment.referencedParameters,
-      ];
+    ...parameters,
+    for (final fragment in fragments) ...fragment.referencedParameters,
+  ];
 
   @override
   Set<String> get referencedFragmentNames => {
-        for (final fragment in fragments) ...fragment.referencedFragmentNames,
-      };
+    for (final fragment in fragments) ...fragment.referencedFragmentNames,
+  };
 
   @override
   String get fragment {
@@ -64,11 +64,7 @@ class QuerySelection extends QueryFragment {
       parameters: parameters,
     );
 
-    return _selection(
-      header: header,
-      fields: fields,
-      fragments: fragments,
-    );
+    return _selection(header: header, fields: fields, fragments: fragments);
   }
 
   void _validate() {
@@ -125,13 +121,13 @@ class InlineFragment extends QueryFragment {
 
   @override
   List<QueryParameter> get referencedParameters => [
-        for (final fragment in fragments) ...fragment.referencedParameters,
-      ];
+    for (final fragment in fragments) ...fragment.referencedParameters,
+  ];
 
   @override
   Set<String> get referencedFragmentNames => {
-        for (final fragment in fragments) ...fragment.referencedFragmentNames,
-      };
+    for (final fragment in fragments) ...fragment.referencedFragmentNames,
+  };
 
   @override
   String get fragment {
@@ -174,13 +170,13 @@ class GraphQLFragmentDefinition {
 
   /// Variables referenced by this definition and its children.
   List<QueryParameter> get referencedParameters => [
-        for (final fragment in fragments) ...fragment.referencedParameters,
-      ];
+    for (final fragment in fragments) ...fragment.referencedParameters,
+  ];
 
   /// Named fragment spreads referenced by this definition and its children.
   Set<String> get referencedFragmentNames => {
-        for (final fragment in fragments) ...fragment.referencedFragmentNames,
-      };
+    for (final fragment in fragments) ...fragment.referencedFragmentNames,
+  };
 
   /// Returns the GraphQL fragment definition.
   String get definition {
@@ -266,10 +262,7 @@ String _selection({
   return buffer.toString();
 }
 
-void _validateFields(
-  List<String> fields, {
-  bool requireNonEmpty = false,
-}) {
+void _validateFields(List<String> fields, {bool requireNonEmpty = false}) {
   if (requireNonEmpty && fields.isEmpty) {
     throw ArgumentError.value(
       fields,

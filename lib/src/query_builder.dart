@@ -52,8 +52,8 @@ class GraphQLQueryBuilder {
   /// Duplicate variable names are allowed only when they resolve to the same
   /// value and compatible metadata.
   Map<String, dynamic> get variables => Map.fromEntries(
-        _mergedParameters().map((parameter) => parameter.toMapEntry()),
-      );
+    _mergedParameters().map((parameter) => parameter.toMapEntry()),
+  );
 
   /// Builds the root field selection.
   ///
@@ -175,11 +175,11 @@ class GraphQLQueryBuilder {
   }
 
   List<QueryParameter> _allParameters() => [
-        ...parameters,
-        for (final fragment in fragments) ...fragment.referencedParameters,
-        for (final definition in fragmentDefinitions)
-          ...definition.referencedParameters,
-      ];
+    ...parameters,
+    for (final fragment in fragments) ...fragment.referencedParameters,
+    for (final definition in fragmentDefinitions)
+      ...definition.referencedParameters,
+  ];
 
   List<QueryParameter> _mergedParameters({bool requireTypes = false}) {
     final registry = _ParameterRegistry();
@@ -217,10 +217,7 @@ class _ParameterRegistry {
     _parameters[parameter.name] = _merge(current, parameter);
   }
 
-  QueryParameter _merge(
-    QueryParameter current,
-    QueryParameter incoming,
-  ) {
+  QueryParameter _merge(QueryParameter current, QueryParameter incoming) {
     if (current.value != incoming.value) {
       throw ArgumentError.value(
         incoming.name,

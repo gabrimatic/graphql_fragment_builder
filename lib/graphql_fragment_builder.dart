@@ -1,7 +1,5 @@
-/// A flexible and type-safe GraphQL fragment builder for Dart and Flutter applications.
-///
-/// This library provides a pattern-matching approach to building GraphQL queries,
-/// offering improved type safety, readability, and maintainability.
+/// Builds GraphQL selection sets, variables, fragments, and operation
+/// documents from Dart objects instead of hand-assembled strings.
 library;
 
 export 'src/query_builder.dart';

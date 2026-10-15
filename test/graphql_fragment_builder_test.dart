@@ -83,8 +83,12 @@ query GetBook(\$id: ID!) {
           QuerySelection(
             name: 'reviews',
             parameters: [
-              QueryParameter('reviewLimit', 3,
-                  argumentName: 'limit', type: 'Int'),
+              QueryParameter(
+                'reviewLimit',
+                3,
+                argumentName: 'limit',
+                type: 'Int',
+              ),
             ],
             fields: ['rating', 'body'],
           ),
@@ -103,8 +107,10 @@ query BooksByAuthor(\$authorName: String!, \$reviewLimit: Int) {
   }
 }'''),
       );
-      expect(builder.variables,
-          equals({'authorName': 'Jane Austen', 'reviewLimit': 3}));
+      expect(
+        builder.variables,
+        equals({'authorName': 'Jane Austen', 'reviewLimit': 3}),
+      );
     });
 
     test('supports mutation operation documents', () {
@@ -117,10 +123,7 @@ query BooksByAuthor(\$authorName: String!, \$reviewLimit: Int) {
           QueryParameter('title', 'Persuasion', type: 'String'),
         ],
         fragments: const [
-          QuerySelection(
-            name: 'book',
-            fields: ['id', 'title'],
-          ),
+          QuerySelection(name: 'book', fields: ['id', 'title']),
         ],
       );
 
@@ -162,31 +165,31 @@ mutation UpdateBookTitle(\$id: ID!, \$title: String) {
     test('requires parameter types for operation documents', () {
       final builder = GraphQLQueryBuilder(
         name: 'testQuery',
-        parameters: const [
-          QueryParameter('id', 'book-1'),
-        ],
+        parameters: const [QueryParameter('id', 'book-1')],
         fragments: [TestFragment()],
       );
 
       expect(builder.buildDocument, throwsStateError);
     });
 
-    test('builds scalar root operation documents without nested selections',
-        () {
-      const builder = GraphQLQueryBuilder(
-        name: 'serverVersion',
-        operationName: 'ServerVersion',
-      );
+    test(
+      'builds scalar root operation documents without nested selections',
+      () {
+        const builder = GraphQLQueryBuilder(
+          name: 'serverVersion',
+          operationName: 'ServerVersion',
+        );
 
-      expect(
-        builder.buildDocument(),
-        equals('''
+        expect(
+          builder.buildDocument(),
+          equals('''
 query ServerVersion {
   serverVersion
 }'''),
-      );
-      expect(builder.variables, isEmpty);
-    });
+        );
+        expect(builder.variables, isEmpty);
+      },
+    );
 
     test('rejects dotted fields so nested selections stay explicit', () {
       const selection = QuerySelection(name: 'book', fields: ['author.name']);
@@ -197,15 +200,11 @@ query ServerVersion {
     test('rejects conflicting duplicate variables', () {
       const builder = GraphQLQueryBuilder(
         name: 'books',
-        parameters: [
-          QueryParameter('limit', 5, type: 'Int'),
-        ],
+        parameters: [QueryParameter('limit', 5, type: 'Int')],
         fragments: [
           QuerySelection(
             name: 'reviews',
-            parameters: [
-              QueryParameter('limit', 3, type: 'Int'),
-            ],
+            parameters: [QueryParameter('limit', 3, type: 'Int')],
             fields: ['rating'],
           ),
         ],
@@ -217,9 +216,7 @@ query ServerVersion {
     test('rejects invalid GraphQL variable types', () {
       const builder = GraphQLQueryBuilder(
         name: 'book',
-        parameters: [
-          QueryParameter('id', 'book-1', type: '[ID'),
-        ],
+        parameters: [QueryParameter('id', 'book-1', type: '[ID')],
         fragments: [
           QuerySelection(name: 'author', fields: ['name']),
         ],
@@ -240,12 +237,8 @@ query ServerVersion {
         parameters: [
           QueryParameter('id', 'book-1', type: 'ID', isRequired: true),
         ],
-        fragments: [
-          FragmentSpread('BookFields'),
-        ],
-        fragmentDefinitions: [
-          bookFields,
-        ],
+        fragments: [FragmentSpread('BookFields')],
+        fragmentDefinitions: [bookFields],
       );
 
       expect(
@@ -264,17 +257,17 @@ fragment BookFields on Book {
       );
     });
 
-    test('rejects fragment spreads without matching definitions in documents',
-        () {
-      const builder = GraphQLQueryBuilder(
-        name: 'book',
-        fragments: [
-          FragmentSpread('MissingFields'),
-        ],
-      );
+    test(
+      'rejects fragment spreads without matching definitions in documents',
+      () {
+        const builder = GraphQLQueryBuilder(
+          name: 'book',
+          fragments: [FragmentSpread('MissingFields')],
+        );
 
-      expect(builder.buildDocument, throwsArgumentError);
-    });
+        expect(builder.buildDocument, throwsArgumentError);
+      },
+    );
 
     test('builds inline fragments for union selections', () {
       const builder = GraphQLQueryBuilder(
@@ -284,14 +277,8 @@ fragment BookFields on Book {
           QueryParameter('text', 'dart', type: 'String', isRequired: true),
         ],
         fragments: [
-          InlineFragment(
-            typeCondition: 'Book',
-            fields: ['title'],
-          ),
-          InlineFragment(
-            typeCondition: 'Author',
-            fields: ['name'],
-          ),
+          InlineFragment(typeCondition: 'Book', fields: ['title']),
+          InlineFragment(typeCondition: 'Author', fields: ['name']),
         ],
       );
 

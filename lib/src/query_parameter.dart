@@ -49,7 +49,7 @@ class QueryParameter<T> {
   String get argument => '${argumentName ?? name}: \$$name';
 
   /// Whether this parameter can be emitted as a GraphQL variable definition.
-  bool get hasDefinition => type != null && type!.trim().isNotEmpty;
+  bool get hasDefinition => _definitionType != null;
 
   /// Returns the GraphQL variable definition for this parameter.
   ///
