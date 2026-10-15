@@ -8,7 +8,7 @@ GraphQL Fragment Builder is a small Dart package for building GraphQL selection 
 
 ## Quick Start
 
-Runtime: **Dart >= 3.8.0**.
+Runtime: **Dart >= 3.5.1**.
 
 Add the package:
 
@@ -196,7 +196,7 @@ Run the full local check:
 
 ```sh
 dart format --output=none --set-exit-if-changed lib test example
-dart analyze
+dart analyze --fatal-infos
 dart test
 dart pub publish --dry-run
 ```
